@@ -60,6 +60,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         save_txt=False,  # save results to *.txt
         save_conf=False,  # save confidences in --save-txt labels
         save_crop=False,  # save cropped prediction boxes
+        min_size=200,  # skip resulting ROIs smaller than this
         nosave=False,  # do not save images/videos
         classes=None,  # filter by class: --class 0, or --class 0 2 3
         agnostic_nms=False,  # class-agnostic NMS
@@ -157,8 +158,13 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
                 # Write results
                 for *xyxy, conf, cls in reversed(det):
+
+                    # get width and height of ROI
+                    absolute_xywh = xyxy2xywh(torch.tensor(xyxy).view(1, 4))
+                    wh = absolute_xywh.numpy()[0][2:4]
+
                     if save_txt:  # Write to file
-                        xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
+                        xywh = (absolute_xywh / gn).view(-1).tolist()  # normalized xywh
                         line = (cls, *xywh, conf) if save_conf else (cls, *xywh)  # label format
                         with open(txt_path + '.txt', 'a') as f:
                             f.write(('%g ' * len(line)).rstrip() % line + '\n')
@@ -167,7 +173,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                         c = int(cls)  # integer class
                         label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
                         annotator.box_label(xyxy, label, color=colors(c, True))
-                        if save_crop:
+                        if save_crop and (wh.min() > min_size):  # skip resulting ROIs smaller than min_size
                             save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
 
             # Stream results
