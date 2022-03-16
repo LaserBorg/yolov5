@@ -218,7 +218,9 @@ class LoadImages:
             # Read image
             self.count += 1
             img0 = cv2.imread(path)  # BGR
-            assert img0 is not None, f'Image Not Found {path}'
+            if img0 is None:  # do not terminate on broken images but replace with black
+                print(f'\n[ERROR] cannot load Image:\n{path}\n')
+                img0 = np.zeros(shape=[100, 100, 3], dtype=np.uint8)
             s = f'image {self.count}/{self.nf} {path}: '
 
         # Padded resize
