@@ -174,7 +174,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                         label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
                         annotator.box_label(xyxy, label, color=colors(c, True))
                         if save_crop and (wh.min() > min_size):  # skip resulting ROIs smaller than min_size
-                            save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
+                            crop_save_path = save_dir / 'crops' / names[c] / f'{p.parent.name}__{p.stem}.jpg'
+                            save_one_box(xyxy, imc, file=crop_save_path, BGR=True, gain=1.0, pad=12, square=True)
 
             # Stream results
             im0 = annotator.result()
